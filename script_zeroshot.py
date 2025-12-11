@@ -251,7 +251,7 @@ def save_messages(result, directory, id):
 answer_pairs = []
 query_pairs = []
 
-SAVE_DIR = os.path.join(SERIES, "results", MODEL_NAME, "dev_{}".format(SUBSET_DIR))
+SAVE_DIR = os.path.join("results", SERIES, MODEL_NAME, "dev_{}".format(SUBSET_DIR))
 
 os.makedirs(SAVE_DIR, exist_ok=True)
 
@@ -279,6 +279,14 @@ with open(os.path.join(SAVE_DIR, "gold.txt"), "w") as f:
     for gt, _ in query_pairs:
         f.write("{}\t{}\n".format(gt, SUBSET_DIR))
 
+with open(os.path.join(SAVE_DIR, "answer_pairs.txt"), "w") as f:
+    for gt, pred in answer_pairs:
+        if not gt:
+            gt = "null"
+        if not pred:
+            pred = "None"
+        f.write("{} ... {}\n".format(gt, pred))
+        
 with open(os.path.join(SAVE_DIR, "pred.txt"), "w") as f:
     for _, pred in query_pairs:
         if not pred:
