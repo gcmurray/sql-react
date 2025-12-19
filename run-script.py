@@ -4,15 +4,16 @@ import os
 # doesn't run tools: "smollm2:135m"
 
 models = [
-#"qwen3:0.6b", #tools, thinking
+"qwen3:0.6b", #tools, thinking
 "qwen3:1.7b", #tools, thinking
 "qwen2.5:latest", #tools, relatively good performance
-"smollm2:1.7b", #tools
-"hermes3:3b", #tools, ... weird model file stuff about experiencing emotions and have deep, profound thoughts and qualia
-"cogito:3b", #tools
-"phi4-mini:3.8b", #tools, smallest modelfile looks like
+#"smollm2:1.7b", #tools
+#"hermes3:3b", #tools, ... weird model file stuff about experiencing emotions and have deep, profound thoughts and qualia
+#"cogito:3b", #tools
+#"phi4-mini:3.8b", #tools, smallest modelfile looks like
 "qwen3:4b", #tools
-"cogito:8b"] #tools
+#"cogito:8b" #tools
+] #tools
 
 # let's do these some other time
 # "llama3-groq-tool-use:8b", #tools
@@ -24,10 +25,12 @@ models = [
 # "granite4:3b", #supposedly tools, whack ollama heuristics mumbo-jumbo
 # "smollm2:360m",] # ---
 
-subsets = ["course_teach", "student_transcripts_tracking", "world_1", "pets_1", "car_1", "flight_2"]
+subsets = ["course_teach", "car_1"]
+           
+#"student_transcripts_tracking", "world_1", "pets_1",
            
 #"employee_hire_evaluation", "cre_Doc_Template_Mgt", "museum_visit", "wta_1", "battle_death", "tvshow", "poker_player", "voter_1", "orchestra", "network_1", "dog_kennels", #"singer", "real_estate_properties", "concert_singer"]
 
 for m in models:
     for s in subsets:
-        os.system("python script_zeroshot.py --run=run001 --model={} --subset={}".format(m, s))
+        os.system("python script_cluster_fewshot.py --run=sqlcluster002 --model={} --subset={}".format(m, s))
