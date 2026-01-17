@@ -117,7 +117,7 @@ DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the databa
 
 def generate_query(state: SQLState):
     system_message = {
-        "role": "system",
+        "role": "user",
         "content": generate_query_system_prompt,
     }
 
@@ -159,9 +159,10 @@ You will call the appropriate tool to execute the query after running this check
 def check_query(state: SQLState):
 
     system_message = {
-        "role": "system",
+        "role": "user",
         "content": check_query_system_prompt,
     }
+    
     # db_query..
     db_query = None
 

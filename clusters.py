@@ -44,6 +44,7 @@ class QueryExample:
     nl: str
     sql: str
     nl_embedding: np.ndarray
+    sql_embedding: np.ndarray
     sql_features: np.ndarray
 
 
@@ -55,24 +56,33 @@ def cluster_nl(examples, n_clusters):
     return labels
 
 
-def cluster_sql(examples, n_clusters):
+def cluster_sql_features(examples, n_clusters):
     X = np.vstack([e.sql_features for e in examples])
     k = min(n_clusters, len(examples))
     km = KMeans(n_clusters=k, random_state=0)
     labels = km.fit_predict(X)
     return labels
 
-def load_examples(path):
+def cluster_sql_embeddings(examples, n_clusters):
+    X = np.vstack([e.sql_embedding for e in examples])
+    k = min(n_clusters, len(examples))
+    km = KMeans(n_clusters=k, random_state=0)
+    labels = km.fit_predict(X)
+    return labels
+
+def load_examples(path, embedding="nomic-embed-text"):
     with open(path) as f:
         raw = json.load(f)
 
-    model = OllamaEmbeddingsNormalized(model="nomic-embed-text")
+    model = OllamaEmbeddingsNormalized(model=embedding)
 
     nls = [ex["question"] for ex in raw]
-    embeddings = [model.embed_query(n) for n in nls]
+    nl_embeddings = [model.embed_query(n) for n in nls]
+    sqls = [ex["query"] for ex in raw]
+    sql_embeddings = [model.embed_query(q) for q in sqls]
 
     examples = []
-    for i, (ex, emb) in enumerate(zip(raw, embeddings)):
+    for i, (ex, nlemb, sqlemb) in enumerate(zip(raw, nl_embeddings, sql_embeddings)):
         sql_features = sql_signature(ex["query"])
         examples.append(
             QueryExample(
@@ -80,7 +90,8 @@ def load_examples(path):
                 database=ex["db_id"],
                 nl=ex["question"],
                 sql=ex["query"],
-                nl_embedding=emb,
+                nl_embedding=nlemb,
+                sql_embedding=sqlemb,
                 sql_features=sql_features,
             )
         )
@@ -107,8 +118,11 @@ def sql_signature(sql: str) -> np.ndarray:
     ], dtype=float)
 
 
-def select_medoid_and_neighbors(examples, k_neighbors=3):
-    X = np.vstack([e.sql_features for e in examples])
+def select_medoid_and_neighbors(examples, k_neighbors=3, by_feature=True):
+    if by_feature:
+        X = np.vstack([e.sql_features for e in examples])
+    else:
+        X = np.vstack([e.sql_embedding for e in examples])
     D = pairwise_distances(X)
 
     medoid_idx = np.argmin(D.sum(axis=0))
@@ -122,7 +136,8 @@ def select_medoid_and_neighbors(examples, k_neighbors=3):
 def select_sql_representatives(
     examples,
     sql_clusters_per_db=5,
-    k_neighbors=2
+    k_neighbors=2,
+    by_feature=True,
 ):
     selected = []
 
@@ -131,7 +146,10 @@ def select_sql_representatives(
         by_db[e.database].append(e)
 
     for db, db_examples in by_db.items():
-        labels = cluster_sql(db_examples, sql_clusters_per_db)
+        if by_feature:
+            labels = cluster_sql_features(db_examples, sql_clusters_per_db)
+        else:
+            labels = cluster_sql_embeddings(db_examples, sql_clusters_per_db)
 
         for cluster_id in set(labels):
             sql_cluster = [
@@ -139,7 +157,7 @@ def select_sql_representatives(
             ]
 
             medoid, neighbors = select_medoid_and_neighbors(
-                sql_cluster, k_neighbors
+                sql_cluster, k_neighbors, by_feature=by_feature,
             )
 
             selected.append(medoid)

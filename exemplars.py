@@ -136,14 +136,16 @@ class ExemplarStore():
 
 
 class ClusterExemplarStore():
-    def __init__(self, train_path, num_clusters=5, num_neighbors=2):
+    def __init__(self, train_path, num_clusters=5, num_neighbors=2, embedding="nomic-embed-text", by_feature=True):
         self.train_path = train_path
         self.num_clusters = num_clusters
         self.num_neighbors = num_neighbors
+        self.by_feature = by_feature
+        self.embed_model = embedding
         #create an ephemeral client for the purposes of creating a exemplar vector store
         self.vector_client = chromadb.EphemeralClient()
 
-        self.embeddings = OllamaEmbeddingsNormalized(model="nomic-embed-text")
+        self.embeddings = OllamaEmbeddingsNormalized(model=embedding)
 
         # the vector store for nl query, with sql metadata.
         self.nl_store = Chroma(
@@ -162,9 +164,12 @@ class ClusterExemplarStore():
         self._init_data()
     
     def _init_data(self):
-        examples = load_examples(self.train_path)
+        examples = load_examples(self.train_path, embedding=self.embed_model)
 
-        representatives = select_sql_representatives(examples, sql_clusters_per_db=self.num_clusters, k_neighbors=self.num_neighbors)
+        representatives = select_sql_representatives(examples, 
+                                                     sql_clusters_per_db=self.num_clusters, 
+                                                     k_neighbors=self.num_neighbors,
+                                                     by_feature=self.by_feature)
         print("number of total cluster exemplars: {}".format(len(representatives)))
 
         nl_docs = []

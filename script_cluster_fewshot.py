@@ -8,6 +8,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-m','--model', action='store', type=str, help='The model string.')
 parser.add_argument('-s', '--subset', action='store', type=str, help='The database subset.')
 parser.add_argument('-r', '--run', action='store', type=str, help='The experiment series label.')
+parser.add_argument('-e', '--embedding', action='store', type=str, help='which llm embedding to use for RAG / clustering.')
+parser.add_argument('-f', '--features', action='store_true', help='whether to use sql keyword features (include for true) or embeddings (in which case, leave out.)')
+parser.add_argument('-c', '--clusters', action='store', type=int, help='how many clusters per DB')
+parser.add_argument('-n', '--neighbors', action='store', type=int, help='how many neighbors to include with medoids')
+
 args = parser.parse_args()
 
 from langchain_ollama import ChatOllama
@@ -49,7 +54,11 @@ toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 tools = toolkit.get_tools()
 
 #### SETUP DYNAMIC EXEMPLARS ####
-exemplar_store = ClusterExemplarStore(os.path.join(DATA_DIR, "train_spider.json"), num_clusters=5, num_neighbors=2)
+exemplar_store = ClusterExemplarStore(os.path.join(DATA_DIR, "train_spider.json"), 
+                                      num_clusters=args.clusters, 
+                                      num_neighbors=args.neighbors, 
+                                      embedding=args.embedding,
+                                      by_feature=args.features)
 
 from langgraph.graph import MessagesState
 # Custom State

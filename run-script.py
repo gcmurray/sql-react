@@ -4,16 +4,23 @@ import os
 # doesn't run tools: "smollm2:135m"
 
 models = [
-"qwen3:0.6b", #tools, thinking
-"qwen3:1.7b", #tools, thinking
-"qwen2.5:latest", #tools, relatively good performance
+    "llama3.1:8b",
+    "mistral-nemo:latest",
+    "mistral:latest",
+    "cogito:8b",
+]
+
+#models = [
+#"qwen3:0.6b", #tools, thinking
+#"qwen3:1.7b", #tools, thinking
+#"qwen2.5:latest", #tools, relatively good performance
 #"smollm2:1.7b", #tools
 #"hermes3:3b", #tools, ... weird model file stuff about experiencing emotions and have deep, profound thoughts and qualia
 #"cogito:3b", #tools
 #"phi4-mini:3.8b", #tools, smallest modelfile looks like
-"qwen3:4b", #tools
+#"qwen3:4b", #tools
 #"cogito:8b" #tools
-] #tools
+#] #tools
 
 # let's do these some other time
 # "llama3-groq-tool-use:8b", #tools
@@ -33,4 +40,4 @@ subsets = ["course_teach", "car_1"]
 
 for m in models:
     for s in subsets:
-        os.system("python script_cluster_fewshot.py --run=sqlcluster002 --model={} --subset={}".format(m, s))
+        os.system("python script_zeroshot.py --run=template_fix_zeroshot_001 --model={} --subset={}".format(m, s))
